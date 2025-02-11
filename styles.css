@@ -1,34 +1,41 @@
-styles.css
-/* Global Styles */
+/* ========================
+   🌟 Global Styles
+======================== */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
     display: flex;
-    background-color: #f4f4f4;
-    color: #343a40;
+    background-color: #f8f9fc;
+    color: #333;
 }
 
-/* Sidebar Styles */
+/* ========================
+   🌟 Sidebar Styles (Fixed Dropdown Issues)
+======================== */
 .sidebar {
-    flex: 0 0 250px; /* Fixed width for sidebar */
-    height: 100vh; /* Full viewport height */
-    background-color: #343a40; /* Dark background */
+    width: 260px;
+    height: 100vh;
+    background: #2c3e50; /* Dark muted blue */
     color: white;
-    overflow-y: auto; /* Scrollable content */
-    padding: 1rem;
-    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    z-index: 1000; /* Ensures it stays above content */
 }
 
 .sidebar h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #f8f9fa;
     text-align: center;
-    border-bottom: 1px solid #495057;
-    padding-bottom: 0.5rem;
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 10px;
 }
 
+/* Sidebar Menu */
 .sidebar ul {
     list-style: none;
     padding: 0;
@@ -36,914 +43,237 @@ body {
 }
 
 .sidebar ul li {
-    margin: 1rem 0;
+    margin: 10px 0;
+    position: relative;
 }
 
-.sidebar ul li .dropdown-button {
-    background-color: #495057;
-    color: white;
-    border: none;
-    padding: 0.8rem 1rem;
-    text-align: left;
+.sidebar ul li a,
+.dropdown-button {
+    display: block;
     width: 100%;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.sidebar ul li .dropdown-button:hover {
-    background-color: #6c757d;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.sidebar ul .dropdown-content {
-    list-style: none;
-    margin-top: 0.5rem;
-    background-color: #6c757d;
-    padding: 0.5rem;
-    border-radius: 4px;
-}
-
-.sidebar ul .dropdown-content li a {
+    background: #3a4a5f;
     color: white;
     text-decoration: none;
-    padding: 0.5rem 1rem;
-    display: block;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
+    padding: 12px;
+    border-radius: 5px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 15px;
+    border: none;
 }
 
-.sidebar ul .dropdown-content li a:hover {
-    background-color: #495057;
+.sidebar ul li a:hover,
+.dropdown-button:hover {
+    background: #556377;
 }
 
-/* Layout Container */
-.layout-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    height: 100vh;
+/* ========================
+   🌟 FIX: Dropdown Styles
+======================== */
+.dropdown-content {
+    display: none;
+    background: #3a4a5f;
+    padding-left: 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+    position: relative;
+    width: 100%; /* Keeps dropdown inside */
     overflow: hidden;
 }
 
-/* Main Content Styles */
+.dropdown-content a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+}
+
+.dropdown-content a:hover {
+    background: #556377;
+}
+
+/* Show dropdown on hover */
+.sidebar ul li:hover .dropdown-content {
+    display: block;
+    position: relative;
+}
+
+/* ========================
+   🌟 Main Content Area
+======================== */
 .main-content {
-    flex: 1; /* Take remaining space */
-    padding: 4rem; /* Adjusted padding */
-    overflow-y: auto; /* Scrollable content */
-    background-color: #f8f9fa;
+    margin-left: 280px;
+    padding: 25px;
+    flex-grow: 1;
+    background-color: white;
+    min-height: 100vh;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .main-content h1 {
     font-size: 2rem;
     color: #007bff;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 0.5rem;
+    margin-bottom: 15px;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 8px;
 }
 
-.main-content p {
-    font-size: 1.2rem;
-    color: #555;
-    line-height: 1.6;
-}
-
-/* Table Styles */
+/* ========================
+   🌟 Table Styles (Fixed Column Overflow)
+======================== */
 .table-container {
-    overflow-x: auto; /* Scrollable container for wide tables */
-    margin: 1rem 0;
-    width: 100%;
+    overflow-x: auto;
+    margin: 20px 0;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0 auto;
-    font-size: 0.9rem;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    table-layout: auto; /* Dynamic column sizing */
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 thead th {
-    background-color: #000000;
+    background: #007bff;
     color: white;
-    padding: 10px;
+    padding: 12px;
     text-align: left;
-    text-transform: uppercase;
+    font-size: 14px;
+    white-space: nowrap; /* Ensures no column breaks */
+}
+
+tbody tr:nth-child(even) {
+    background: #f9f9f9;
 }
 
 tbody td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    word-break: break-word; /* Wrap long text */
-    white-space: normal;   /* Prevent overflow */
-    vertical-align: top;
-}
-
-tbody td.message-column {
-    max-width: 400px; /* Limit message column width */
-    white-space: pre-wrap; /* Preserve line breaks */
-    line-height: 1.5; /* Add spacing for readability */
-    overflow-wrap: break-word;
-}
-
-tbody td:nth-child(2), /* Email column */
-tbody td:nth-child(3) { /* Subject column */
-    max-width: 200px; /* Adjust for layout balance */
-}
-
-tbody td:nth-child(5), /* Date column */
-tbody td:nth-child(6) { /* Status column */
-    text-align: center;
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    max-width: 200px; /* Ensures data stays within columns */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 tbody tr:hover {
-    background-color: #f2f2f2; /* Highlight row on hover */
+    background: #e2e6ea;
 }
 
-/* Button Styles */
-.button, a.button {
+/* ========================
+   🌟 Button Styles
+======================== */
+.button {
     display: inline-block;
-    padding: 0.7rem 1.2rem;
-    margin-top: 4rem;
+    padding: 10px 18px;
+    background: #007bff;
     color: white;
-    background-color: #28a745; /* Green for actions */
-    border-radius: 4px;
     text-decoration: none;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.button:hover, a.button:hover {
-    background-color: #218838;
-}
-/* Logout button styling */
-.logout-button {
-    position: absolute; /* Position it on the page */
-    top: 20px; /* Distance from the top */
-    right: 20px; /* Distance from the right */
-    background-color: #333333; /* Dark background for logout */
-    color: white; /* White text */
-    padding: 10px 15px;
-    border: none;
     border-radius: 5px;
-    text-decoration: none; /* Remove underline */
+    transition: 0.3s;
     font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-/* Hover effect */
-.logout-button:hover {
-    background-color: #000000; /* Black on hover */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
-}
-
-/* Add some shadow */
-.logout-button {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-}
-.sidebar {
-    width: 250px;
-    background-color: #343a40;
-    padding: 15px;
-    color: #fff;
-    height: 100vh;
-}
-
-.sidebar h2 {
-    text-align: center;
-    color: #fff;
-    margin-bottom: 20px;
-}
-
-.sidebar ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar ul li {
-    margin-bottom: 10px;
-    position: relative;
-}
-
-.dropdown-button {
-    width: 100%;
-    background-color: #6c757d;
-    color: #fff;
     border: none;
-    padding: 10px;
-    text-align: left;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px;
 }
 
-.dropdown-button:hover {
-    background-color: #5a6268;
+.button:hover {
+    background: #0056b3;
 }
 
-.dropdown-content {
-    display: none;
-    margin-top: 5px;
-    padding-left: 10px;
-    background-color: #495057;
-    border-radius: 5px;
-}
-
-.dropdown-content li {
-    margin: 5px 0;
-}
-
-.dropdown-content li a {
-    color: #fff;
-    text-decoration: none;
-}
-
-.dropdown-content li a:hover {
-    text-decoration: underline;
-}
-
-.dropdown-button:focus + .dropdown-content,
-.dropdown-content:hover {
-    display: block;
-}
-/* Sidebar Styling */
-.sidebar {
-    width: 250px;
-    background-color: #343a40;
-    color: #fff;
-    padding: 15px;
-    height: 100vh;
-}
-
-.sidebar h2 {
-    text-align: center;
-    color: #fff;
-    margin-bottom: 20px;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar li {
-    margin-bottom: 10px;
-}
-
-.dropdown-button {
-    width: 100%;
-    background-color: #6c757d;
-    color: #fff;
-    border: none;
-    padding: 10px;
-    text-align: left;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px;
-}
-
-.dropdown-button:hover {
-    background-color: #5a6268;
-}
-
-/* Dropdown Content */
-.dropdown-content {
-    background-color: #495057;
-    padding-left: 15px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    display: block; /* Always visible when rendered */
-    margin-top: 5px;
-}
-
-.dropdown-content li {
-    margin: 5px 0;
-}
-
-.dropdown-content a {
-    color: #fff;
-    text-decoration: none;
-}
-
-.dropdown-content a:hover {
-    text-decoration: underline;
-}
-
-/* Logout Button */
+/* ========================
+   🌟 Logout Button
+======================== */
 .logout-button {
     display: block;
-    margin-top: 20px;
-    text-align: center;
-    padding: 10px;
     background-color: #dc3545;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 5px;
-}
-
-.logout-button:hover {
-    background-color: #c82333;
-}
-/* Sidebar Styling */
-.sidebar {
-    width: 250px;
-    background-color: #343a40;
-    color: #fff;
-    padding: 15px;
-    height: 100vh;
-    position: fixed;
-}
-
-.sidebar h2 {
+    color: white;
+    padding: 12px;
     text-align: center;
-    color: #fff;
-    margin-bottom: 20px;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar li {
-    margin-bottom: 10px;
-    position: relative;
-}
-
-.dropdown-button {
-    width: 100%;
-    background-color: #6c757d;
-    color: #fff;
-    border: none;
-    padding: 10px;
-    text-align: left;
-    cursor: pointer;
-    font-size: 16px;
     border-radius: 5px;
-}
-
-.dropdown-button:hover {
-    background-color: #5a6268;
-}
-
-/* Dropdown Content Styling */
-.dropdown-content {
-    background-color: #495057;
-    padding-left: 15px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    display: none; /* Default: hidden */
-    margin-top: 5px;
-    border-radius: 5px;
-}
-
-.dropdown-content li {
-    margin: 5px 0;
-}
-
-.dropdown-content li a {
-    color: #fff;
     text-decoration: none;
-}
-
-.dropdown-content li a:hover {
-    text-decoration: underline;
-}
-
-/* Logout Button */
-.logout-button {
-    display: block;
-    margin-top: 20px;
-    text-align: center;
-    padding: 10px;
-    background-color: #dc3545;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 5px;
-}
-
-.logout-button:hover {
-    background-color: #c82333;
-}
-/* Sidebar Styling */
-.sidebar {
-    width: 250px; /* Fixed width for the sidebar */
-    background-color: #343a40;
-    color: #fff;
-    padding: 15px;
-    height: 100vh; /* Make it full height */
-    position: fixed; /* Fix sidebar to the left */
-    left: 0;
-    top: 0;
-}
-
-.sidebar h2 {
-    text-align: center;
-    color: #fff;
-    margin-bottom: 20px;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar li {
-    margin-bottom: 10px;
-    position: relative;
-}
-
-.dropdown-button {
-    width: 100%;
-    background-color: #6c757d;
-    color: #fff;
-    border: none;
-    padding: 10px;
-    text-align: left;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px;
-}
-
-.dropdown-button:hover {
-    background-color: #5a6268;
-}
-
-/* Dropdown Content Styling */
-.dropdown-content {
-    background-color: #495057;
-    padding-left: 15px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    display: none; /* Default: hidden */
-    margin-top: 5px;
-    border-radius: 5px;
-}
-
-.dropdown-content li {
-    margin: 5px 0;
-}
-
-.dropdown-content li a {
-    color: #fff;
-    text-decoration: none;
-}
-
-.dropdown-content li a:hover {
-    text-decoration: underline;
-}
-
-/* Show dropdown on button click */
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
-/* Logout Button */
-.logout-button {
-    display: block;
-    margin-top: 20px;
-    text-align: center;
-    padding: 10px;
-    background-color: #dc3545;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 5px;
+    font-size: 14px;
+    margin-top: 10px;
 }
 
 .logout-button:hover {
     background-color: #c82333;
 }
 
-/* Main Content Styling */
-.main-content {
-    margin-left: 270px; /* Ensure content starts after the sidebar */
-    padding: 20px;
-}
-/* Logout Button */
-.logout-button {
-    position: absolute; /* Position the button absolutely */
-    top: 20px; /* Space from the top of the viewport */
-    right: 20px; /* Space from the right of the viewport */
-    padding: 10px 20px;
-    background-color: #000000;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.logout-button:hover {
-    background-color: #000000;
-}
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f9;
-}
-
-.container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    text-align: center;
-    color: #333;
-}
-
-h2 {
-    color: #555;
-    margin-bottom: 10px;
-}
-
-.message {
-    padding: 10px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-}
-
-.message.error {
-    background-color: #f8d7da;
-    color: #842029;
-}
-
-.message.success {
-    background-color: #d1e7dd;
-    color: #0f5132;
-}
-
-.form-container {
-    margin-bottom: 30px;
-}
-
-.user-form label {
-    display: block;
-    margin-bottom: 5px;
-    color: #333;
-    font-weight: bold;
-}
-
-.user-form input,
-.user-form select {
-    width: 90%;
+/* ========================
+   🌟 Form Styling
+======================== */
+form input,
+form select,
+form textarea {
+    width: 100%;
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    font-size: 14px;
 }
 
-.user-form button {
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+form textarea {
+    height: 100px;
+}
+
+form button {
     width: 100%;
-}
-
-.user-form button:hover {
-    background-color: #0056b3;
-}
-
-.user-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.user-table th,
-.user-table td {
-    border: 1px solid #ccc;
+    background: #28a745;
+    color: white;
     padding: 10px;
-    text-align: left;
-}
-
-.user-table th {
-    background-color: #007bff;
-    color: #fff;
-}
-
-.user-table td {
-    background-color: #f9f9f9;
-}
-
-.delete-button {
-    background-color: #dc3545;
-    color: #fff;
-    padding: 5px 10px;
     border: none;
     border-radius: 5px;
+    font-size: 14px;
     cursor: pointer;
 }
 
-.delete-button:hover {
-    background-color: #c82333;
-}
-/* Sidebar Styling */
-.sidebar {
-    width: 250px; /* Fixed width for the sidebar */
-    height: 100vh; /* Full height */
-    background-color: #343a40;
-    color: white;
-    padding-top: 20px;
-    position: fixed; /* Fixed to the left side */
-    left: 0;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 20px; /* Adds space for the logout button */
+form button:hover {
+    background: #218838;
 }
 
-/* Sidebar heading */
-.sidebar h2 {
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 20px;
-    color: #fff;
-    font-family: 'Arial', sans-serif;
-}
-
-/* Sidebar list styling */
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    flex-grow: 1; /* Allow the menu items to take up remaining space */
-}
-
-.sidebar ul li {
-    padding: 12px 20px;
-    border-bottom: 1px solid #444;
-}
-
-.sidebar ul li a {
-    color: white;
-    text-decoration: none;
-    display: block;
-    font-size: 16px;
-    padding: 5px 0;
-    font-family: 'Arial', sans-serif;
-}
-
-.sidebar ul li a:hover {
-    background-color: #555;
-}
-
-/* Dropdown button styling */
-.dropdown-button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 16px;
-    width: 100%;
-    text-align: left;
-    padding: 5px 0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.dropdown-button:hover {
-    background-color: #555;
-}
-
-/* Dropdown content styling */
-.dropdown-content {
-    display: none;
-    list-style: none;
-    padding: 0;
-}
-
-.sidebar ul li:hover .dropdown-content {
-    display: block;
-}
-
-.dropdown-content li {
-    padding: 8px 20px;
-    background-color: #444;
-    border-bottom: 1px solid #555;
-}
-
-.dropdown-content li a:hover {
-    background-color: #666;
-}
-
-/* Logout button styled like dropdown buttons */
-.sidebar ul li.logout {
-    margin-top: auto; /* Push logout button to the bottom */
-}
-
-.sidebar ul li a[href="logout.php"] {
-    background-color: #444; /* Same background as other dropdown items */
-    color: white; /* Ensure text is white */
-    padding: 10px 20px; /* Add padding to make it look like a button */
-    border-radius: 5px; /* Make it rounded like the other buttons */
-    display: block; /* Ensure it takes up full width */
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-}
-
-.sidebar ul li a[href="logout.php"]:hover {
-    background-color: #6c757d; /* Lighter shade on hover */
-}
-/* Ensure the message appears properly at the top */
+/* ========================
+   🌟 Messages & Alerts
+======================== */
 .message {
-    text-align: center;
-    margin: 20px;
-    padding: 15px;
+    padding: 10px;
     border-radius: 5px;
-    font-size: 16px;
-    width: 90%;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
+    text-align: center;
+    font-size: 14px;
 }
 
-/* Success message styling */
 .message.success {
-    background-color: #d4edda;
+    background: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
 }
 
-/* Error message styling */
 .message.error {
-    background-color: #f8d7da;
+    background: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
-/* Réinitialisation du mot de passe */
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #f4f4f9;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    flex-direction: column;
-}
 
-/* Titre principal */
-h1 {
-    text-align: center;
-    color: #333;
-    font-size: 32px;
-    margin-bottom: 30px;
-}
-
-/* Conteneur du formulaire */
-form {
-    width: 100%;
-    max-width: 350px;
-    background-color: white;
-    padding: 5px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-}
-
-/* Labels */
-label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 16px;
-    color: #555;
-}
-
-/* Sélectionner un utilisateur et champs de saisie */
-input, select {
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    width: 90%;
-}
-
-input:focus, select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
-    outline: none;
-}
-
-/* Bouton de soumission */
-button {
-    background-color: #007bff;
-    color: white;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 100%;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-/* Messages d'erreur et de succès */
-.error {
-    color: red;
-    font-size: 14px;
-    margin-bottom: 15px;
-}
-
-.success {
-    color: green;
-    font-size: 14px;
-    margin-bottom: 15px;
-}
-
-/* Responsivité pour petits écrans */
-@media (max-width: 600px) {
-    form {
-        width: 90%;
+/* ========================
+   🌟 Responsive Styles
+======================== */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 220px;
+    }
+    .main-content {
+        margin-left: 240px;
     }
 }
-/* Button Styles for Delete */
-.delete-button {
-    background-color: #dc3545;
-    color: white;
-    padding: 5px 10px; /* Adjusted padding for a smaller button */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px; /* Slightly smaller font size */
-    transition: background-color 0.3s ease;
-    max-width: 100px; /* Optionally add a max-width to keep it consistent */
-}
 
-.delete-button:hover {
-    background-color: #c82333;
-}
-/* Styling for the response form */
-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    height: 100px;
-    font-size: 14px;
-    font-family: Arial, sans-serif;
-}
-
-form button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    width: 100%;
-}
-
-form button:hover {
-    background-color: #0056b3;
-}
-/* Styling for the response textarea */
-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    height: 100px;
-    font-size: 14px;
-    font-family: Arial, sans-serif;
-}
-
-/* Styling for the response button */
-form button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    width: 100%;
-}
-
-form button:hover {
-    background-color: #0056b3;
+@media (max-width: 480px) {
+    .sidebar {
+        width: 200px;
+        padding: 10px;
+    }
+    .main-content {
+        margin-left: 220px;
+        padding: 15px;
+    }
 }
