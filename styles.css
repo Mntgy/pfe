@@ -2,280 +2,280 @@
    🌟 Global Styles
 ======================== */
 body {
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    background-color: #f8f9fc;
-    color: #333;
-    justify-content: space-evenly;
-    align-items: center;
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  background-color: #f8f9fc;
+  color: #333;
+  justify-content: space-evenly;
+  align-items: center;
 }
 
 /* ========================
-   🌟 Sidebar Styles (Fixed Dropdown Issues)
+ 🌟 Sidebar Styles (Fixed Dropdown Issues)
 ======================== */
 .sidebar {
-    width: 260px;
-    height: 100vh;
-    background: #2c3e50; /* Dark muted blue */
-    color: white;
-    padding: 20px;
-    position: fixed;
-    left: 0;
-    top: 0;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
-    overflow-y: auto;
-    z-index: 1000; /* Ensures it stays above content */
+  width: 260px;
+  height: 100vh;
+  background: #2c3e50; /* Dark muted blue */
+  color: white;
+  padding: 20px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  z-index: 1000; /* Ensures it stays above content */
 }
 
 .sidebar h2 {
-    text-align: center;
-    font-size: 1.6rem;
-    margin-bottom: 20px;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-    padding-bottom: 10px;
+  text-align: center;
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 10px;
 }
 
 /* Sidebar Menu */
 .sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .sidebar ul li {
-    margin: 10px 0;
-    position: relative;
+  margin: 10px 0;
+  position: relative;
 }
 
 .sidebar ul li a,
 .dropdown-button {
-    display: block;
-    width: 100%;
-    background: #3a4a5f;
-    color: white;
-    text-decoration: none;
-    padding: 12px;
-    border-radius: 5px;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.3s;
-    font-size: 15px;
-    border: none;
+  display: block;
+  width: 100%;
+  background: #3a4a5f;
+  color: white;
+  text-decoration: none;
+  padding: 12px;
+  border-radius: 5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-size: 15px;
+  border: none;
 }
 
 .sidebar ul li a:hover,
 .dropdown-button:hover {
-    background: #556377;
+  background: #556377;
 }
 
 /* ========================
-   🌟 FIX: Dropdown Styles
+ 🌟 FIX: Dropdown Styles
 ======================== */
 .dropdown-content {
-    display: none;
-    background: #3a4a5f;
-    padding-left: 10px;
-    border-radius: 5px;
-    margin-top: 5px;
-    position: relative;
-    width: 100%; /* Keeps dropdown inside */
-    overflow: hidden;
+  display: none;
+  background: #3a4a5f;
+  padding-left: 10px;
+  border-radius: 5px;
+  margin-top: 5px;
+  position: relative;
+  width: 100%; /* Keeps dropdown inside */
+  overflow: hidden;
 }
 
 .dropdown-content a {
-    display: block;
-    padding: 10px;
-    text-decoration: none;
-    color: white;
-    transition: 0.3s;
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: white;
+  transition: 0.3s;
 }
 
 .dropdown-content a:hover {
-    background: #556377;
+  background: #556377;
 }
 
 /* Show dropdown on hover */
 .sidebar ul li:hover .dropdown-content {
-    display: block;
-    position: relative;
+  display: block;
+  position: relative;
 }
 
 /* ========================
-   🌟 Main Content Area
+ 🌟 Main Content Area
 ======================== */
 .main-content {
-    margin-left: 280px;
-    padding: 25px;
-    flex-grow: 1;
-    background-color: white;
-    min-height: 100vh;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  margin-left: 280px;
+  padding: 25px;
+  flex-grow: 1;
+  background-color: white;
+  min-height: 100vh;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .main-content h1 {
-    font-size: 2rem;
-    color: #007bff;
-    margin-bottom: 15px;
-    border-bottom: 3px solid #007bff;
-    padding-bottom: 8px;
+  font-size: 2rem;
+  color: #007bff;
+  margin-bottom: 15px;
+  border-bottom: 3px solid #007bff;
+  padding-bottom: 8px;
 }
 
 /* ========================
-   🌟 Table Styles (Fixed Column Overflow)
+ 🌟 Table Styles (Fixed Column Overflow)
 ======================== */
 .table-container {
-    overflow-x: auto;
-    margin: 20px 0;
+  overflow-x: auto;
+  margin: 20px 0;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 6px;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 thead th {
-    background: #007bff;
-    color: white;
-    padding: 12px;
-    text-align: left;
-    font-size: 14px;
-    white-space: nowrap; /* Ensures no column breaks */
+  background: #007bff;
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+  white-space: nowrap; /* Ensures no column breaks */
 }
 
 tbody tr:nth-child(even) {
-    background: #f9f9f9;
+  background: #f9f9f9;
 }
 
 tbody td {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-    max-width: 200px; /* Ensures data stays within columns */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  max-width: 200px; /* Ensures data stays within columns */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 tbody tr:hover {
-    background: #e2e6ea;
+  background: #e2e6ea;
 }
 
 /* ========================
-   🌟 Button Styles
+ 🌟 Button Styles
 ======================== */
 .button {
-    display: inline-block;
-    padding: 10px 18px;
-    background: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    transition: 0.3s;
-    font-size: 14px;
-    border: none;
+  display: inline-block;
+  padding: 10px 18px;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: 0.3s;
+  font-size: 14px;
+  border: none;
 }
 
 .button:hover {
-    background: #0056b3;
+  background: #0056b3;
 }
 
 /* ========================
-   🌟 Logout Button
+ 🌟 Logout Button
 ======================== */
 .logout-button {
-    display: block;
-    background-color: #dc3545;
-    color: white;
-    padding: 12px;
-    text-align: center;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 14px;
-    margin-top: 10px;
+  display: block;
+  background-color: #dc3545;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 14px;
+  margin-top: 10px;
 }
 
 .logout-button:hover {
-    background-color: #c82333;
+  background-color: #c82333;
 }
 
 /* ========================
-   🌟 Form Styling
+ 🌟 Form Styling
 ======================== */
 form input,
 form select,
 form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 14px;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
 }
 
 form textarea {
-    height: 100px;
+  height: 100px;
 }
 
 form button {
-    width: 100%;
-    background: #28a745;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    font-size: 14px;
-    cursor: pointer;
+  width: 100%;
+  background: #28a745;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 form button:hover {
-    background: #218838;
+  background: #218838;
 }
 
 /* ========================
-   🌟 Messages & Alerts
+ 🌟 Messages & Alerts
 ======================== */
 .message {
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    font-size: 14px;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 14px;
 }
 
 .message.success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
 .message.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
 /* ========================
-   🌟 Responsive Styles
+ 🌟 Responsive Styles
 ======================== */
 @media (max-width: 768px) {
-    .sidebar {
-        width: 220px;
-    }
-    .main-content {
-        margin-left: 240px;
-    }
+  .sidebar {
+      width: 220px;
+  }
+  .main-content {
+      margin-left: 240px;
+  }
 }
 
 @media (max-width: 480px) {
-    .sidebar {
-        width: 200px;
-        padding: 10px;
-    }
-    .main-content {
-        margin-left: 220px;
-        padding: 15px;
-    }
+  .sidebar {
+      width: 200px;
+      padding: 10px;
+  }
+  .main-content {
+      margin-left: 220px;
+      padding: 15px;
+  }
 }
