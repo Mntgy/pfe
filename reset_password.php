@@ -56,7 +56,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex;
         }
 
-        /* 🌟 Sidebar */
+        /* 🌟 Sidebar Styles (Improved Dropdown Formatting) */
         .sidebar {
             width: 260px;
             height: 100vh;
@@ -71,6 +71,51 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             z-index: 1000;
         }
 
+        .sidebar h2 {
+            text-align: center;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        /* 🌟 Sidebar Menu Styles */
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            background: #3a4a5f;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .sidebar ul li a:hover {
+            background: #556377;
+        }
+
+        /* 🌟 Dropdown Styling */
+        .sidebar ul li ul {
+            list-style: none;
+            padding-left: 15px;
+            display: none;
+        }
+
+        .sidebar ul li:hover ul {
+            display: block;
+        }
+
         /* 🌟 Main Content */
         .main-content {
             margin-left: 280px;
@@ -81,6 +126,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             width: 100%;
         }
 
@@ -157,6 +203,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
             .main-content {
                 margin-left: 240px;
+                padding: 20px;
             }
         }
 
@@ -173,20 +220,40 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </style>
 </head>
 <body>
-    <?php include 'sidebar.php'; ?> <!-- Include Sidebar -->
+    <div class="sidebar">
+        <h2>Menu</h2>
+        <ul>
+            <li><a href="#">Stock ▼</a>
+                <ul>
+                    <li><a href="#">PC</a></li>
+                    <li><a href="#">Périphériques</a></li>
+                    <li><a href="#">Imprimantes</a></li>
+                    <li><a href="#">Téléphones</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Assistance ▼</a>
+                <ul>
+                    <li><a href="#">Tickets</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Alert ▼</a>
+                <ul>
+                    <li><a href="#">View Alerts</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Admin ▼</a>
+                <ul>
+                    <li><a href="#">Gérer les utilisateurs</a></li>
+                    <li><a href="#">Réinitialiser mot de passe utilisateurs</a></li>
+                    <li><a href="#">Edit Password</a></li>
+                    <li><a href="#">Déconnexion</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
 
     <div class="main-content">
         <h1>Réinitialiser le mot de passe</h1>
-
-        <!-- Display Success or Error Messages -->
-        <?php if (!empty($error)): ?>
-            <p class="message error"><?php echo $error; ?></p>
-        <?php endif; ?>
-        <?php if (!empty($success)): ?>
-            <p class="message success"><?php echo $success; ?></p>
-        <?php endif; ?>
-
-        <!-- Password Reset Form -->
         <div class="form-container">
             <form method="POST">
                 <label for="user_id">Sélectionner l'utilisateur :</label>
