@@ -2,45 +2,57 @@
 session_start();
 require 'db.php';
 
-// Ensure the user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+// ✅ Allow both users and admins
+if (!isset($_SESSION['admin_logged_in']) && !isset($_SESSION['user_logged_in'])) {
     header('Location: login.php');
     exit();
 }
 
-// Initialize error and success messages
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $current_password = $_POST['current_password'];
-    $new_password = $_POST['new_password'];
-    $confirm_password = $_POST['confirm_password'];
+    $current_password = trim($_POST['current_password']);
+    $new_password = trim($_POST['new_password']);
+    $confirm_password = trim($_POST['confirm_password']);
 
-    // Validate the form inputs
     if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
         $error = 'All fields are required.';
     } elseif ($new_password !== $confirm_password) {
         $error = 'New password and confirm password do not match.';
     } else {
-        // Fetch the current admin details
-        $sql = "SELECT * FROM admin_users WHERE username = :username";
+        // ✅ Determine if user is an admin or a regular user
+        if (isset($_SESSION['admin_logged_in'])) {
+            $table = 'admin_users';
+            $username = $_SESSION['admin_username'];
+        } else {
+            $table = 'users';
+            $username = $_SESSION['user_username'];
+        }
+
+        // Fetch the current user details
+        $sql = "SELECT * FROM $table WHERE username = :username";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(['username' => $_SESSION['admin_username']]);
-        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->execute(['username' => $username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Verify the current password
-        if ($admin && password_verify($current_password, $admin['password'])) {
+        if ($user && password_verify($current_password, $user['password'])) {
             // Hash the new password
             $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
 
-            // Update the password in the database
-            $update_sql = "UPDATE admin_users SET password = :password WHERE username = :username";
+            // Update password in the database
+            $update_sql = "UPDATE $table SET password = :password WHERE username = :username";
             $update_stmt = $pdo->prepare($update_sql);
             $update_stmt->execute([
                 'password' => $hashed_password,
-                'username' => $_SESSION['admin_username'],
+                'username' => $username,
             ]);
+
+            // ✅ Log password change if logging is enabled
+            if (function_exists('logAction')) {
+                logAction($pdo, $username, isset($_SESSION['admin_logged_in']) ? 'admin' : 'user', 'Password Change', 'User changed their password.');
+            }
 
             $success = 'Password updated successfully!';
         } else {
@@ -56,98 +68,145 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Password</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        /* Styling for the change password form */
+        /* 🌟 General Styles */
         body {
             font-family: Arial, sans-serif;
-            background: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 0;
+            background: #f8f9fc;
+            display: flex;
         }
 
-        .change-password-container {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 300px;
+        /* 🌟 Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 40px;
+            flex-grow: 1;
+            background-color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
         }
 
-        .change-password-container h1 {
+        h1 {
+            font-size: 2rem;
+            color: #007bff;
             margin-bottom: 20px;
-            font-size: 24px;
-            color: #333333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
             text-align: center;
         }
 
-        .change-password-container form label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #555555;
+        /* 🌟 Form Styling */
+        .form-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
         }
 
-        .change-password-container form input {
+        form input {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 14px;
         }
 
-        .change-password-container form button {
+        form button {
+            width: 100%;
             background: #007bff;
             color: white;
-            padding: 10px 15px;
+            padding: 10px;
             border: none;
             border-radius: 5px;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
-            width: 100%;
         }
 
-        .change-password-container form button:hover {
+        form button:hover {
             background: #0056b3;
         }
 
-        .change-password-container .message {
-            font-size: 14px;
-            color: red;
+        /* 🌟 Message Styles */
+        .message {
+            padding: 10px;
+            border-radius: 5px;
             text-align: center;
-            margin-bottom: 10px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 500px;
         }
 
-        .change-password-container .success {
-            color: green;
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* 🌟 Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 240px;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                margin-left: 220px;
+                padding: 15px;
+            }
         }
     </style>
 </head>
 <body>
-<?php include 'sidebar.php'; ?> <!-- Include sidebar -->
-    <div class="change-password-container">
-        
+
+    <!-- ✅ Include Sidebar -->
+    <?php include 'sidebar.php'; ?>
+
+    <div class="main-content">
         <h1>Change Password</h1>
+
+        <!-- ✅ Display Success or Error Messages -->
         <?php if (!empty($error)): ?>
-            <div class="message"><?php echo $error; ?></div>
-        <?php elseif (!empty($success)): ?>
-            <div class="message success"><?php echo $success; ?></div>
+            <p class="message error"><?php echo htmlspecialchars($error); ?></p>
         <?php endif; ?>
-        <form method="post" action="change_password.php">
-            <label for="current_password">Current Password:</label>
-            <input type="password" id="current_password" name="current_password" required>
+        <?php if (!empty($success)): ?>
+            <p class="message success"><?php echo htmlspecialchars($success); ?></p>
+        <?php endif; ?>
 
-            <label for="new_password">New Password:</label>
-            <input type="password" id="new_password" name="new_password" required>
+        <!-- ✅ Password Change Form -->
+        <div class="form-container">
+            <form method="POST">
+                <label for="current_password">Current Password:</label>
+                <input type="password" id="current_password" name="current_password" required>
 
-            <label for="confirm_password">Confirm New Password:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
+                <label for="new_password">New Password:</label>
+                <input type="password" id="new_password" name="new_password" required>
 
-            <button type="submit">Update Password</button>
-        </form>
+                <label for="confirm_password">Confirm New Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+
+                <button type="submit">Update Password</button>
+            </form>
+        </div>
     </div>
+
 </body>
 </html>
