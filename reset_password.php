@@ -225,28 +225,28 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <ul>
             <li><a href="#">Stock ▼</a>
                 <ul>
-                    <li><a href="#">PC</a></li>
-                    <li><a href="#">Périphériques</a></li>
-                    <li><a href="#">Imprimantes</a></li>
-                    <li><a href="#">Téléphones</a></li>
+                    <li><a href="pc.php">PC</a></li>
+                    <li><a href="peripheriques.php">Périphériques</a></li>
+                    <li><a href="imprimantes.php">Imprimantes</a></li>
+                    <li><a href="telephones.php">Téléphones</a></li>
                 </ul>
             </li>
             <li><a href="#">Assistance ▼</a>
                 <ul>
-                    <li><a href="#">Tickets</a></li>
+                    <li><a href="assistance.php">Tickets</a></li>
                 </ul>
             </li>
             <li><a href="#">Alert ▼</a>
                 <ul>
-                    <li><a href="#">View Alerts</a></li>
+                    <li><a href="view_alerts.php">View Alerts</a></li>
                 </ul>
             </li>
             <li><a href="#">Admin ▼</a>
                 <ul>
-                    <li><a href="#">Gérer les utilisateurs</a></li>
-                    <li><a href="#">Réinitialiser mot de passe utilisateurs</a></li>
-                    <li><a href="#">Edit Password</a></li>
-                    <li><a href="#">Déconnexion</a></li>
+                    <li><a href="manage_users.php">Gérer les utilisateurs</a></li>
+                    <li><a href="reset_password.php">Réinitialiser mot de passe utilisateurs</a></li>
+                    <li><a href="change_password.php">Edit Password</a></li>
+                    <li><a href="logout.php">Déconnexion</a></li>
                 </ul>
             </li>
         </ul>
