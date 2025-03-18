@@ -17,38 +17,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
     $username = htmlspecialchars(trim($_POST['username']));
     $password = htmlspecialchars(trim($_POST['password']));
     $role = htmlspecialchars(trim($_POST['role']));
+    $email = htmlspecialchars(trim($_POST['email'])); // New email field
 
-    if (empty($username) || empty($password) || empty($role)) {
+    if (empty($username) || empty($password) || empty($role) || empty($email)) {
         $error = 'All fields are required.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Invalid email format.';
     } elseif (!in_array($role, ['admin', 'limited'])) {
         $error = 'Invalid role.';
     } else {
         try {
             if ($role === 'admin') {
-                $stmt = $pdo->prepare('SELECT id FROM admin_users WHERE username = :username');
-                $stmt->execute(['username' => $username]);
+                $stmt = $pdo->prepare('SELECT id FROM admin_users WHERE username = :username OR email = :email');
+                $stmt->execute(['username' => $username, 'email' => $email]);
 
                 if ($stmt->fetch()) {
-                    $error = 'Admin username already exists.';
+                    $error = 'Admin username or email already exists.';
                 } else {
                     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-                    $stmt = $pdo->prepare('INSERT INTO admin_users (username, password) VALUES (:username, :password)');
-                    $stmt->execute(['username' => $username, 'password' => $hashed_password]);
+                    $stmt = $pdo->prepare('INSERT INTO admin_users (username, password, email) VALUES (:username, :password, :email)');
+                    $stmt->execute([
+                        'username' => $username,
+                        'password' => $hashed_password,
+                        'email' => $email,
+                    ]);
                     $success = 'Admin created successfully.';
                 }
             } else {
-                $stmt = $pdo->prepare('SELECT id FROM users WHERE username = :username');
-                $stmt->execute(['username' => $username]);
+                $stmt = $pdo->prepare('SELECT id FROM users WHERE username = :username OR email = :email');
+                $stmt->execute(['username' => $username, 'email' => $email]);
 
                 if ($stmt->fetch()) {
-                    $error = 'Username already exists.';
+                    $error = 'Username or email already exists.';
                 } else {
                     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-                    $stmt = $pdo->prepare('INSERT INTO users (username, password, role) VALUES (:username, :password, :role)');
+                    $stmt = $pdo->prepare('INSERT INTO users (username, password, role, email) VALUES (:username, :password, :role, :email)');
                     $stmt->execute([
                         'username' => $username,
                         'password' => $hashed_password,
                         'role' => $role,
+                        'email' => $email,
                     ]);
                     $success = 'User created successfully.';
                 }
@@ -97,10 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
 }
 
 // Fetch all users and admins
-$stmt = $pdo->query('SELECT id, username, role, created_at FROM users ORDER BY created_at DESC');
+$stmt = $pdo->query('SELECT id, username, role, email, created_at FROM users ORDER BY created_at DESC');
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $pdo->query('SELECT id, username, created_at FROM admin_users ORDER BY created_at DESC');
+$stmt = $pdo->query('SELECT id, username, email, created_at FROM admin_users ORDER BY created_at DESC');
 $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -135,6 +143,9 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
 
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+
                 <label for="role">Role:</label>
                 <select id="role" name="role" required>
                     <option value="limited">Limited User</option>
@@ -152,6 +163,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                     <th>ID</th>
                     <th>Username</th>
+                    <th>Email</th>
                     <th>Role</th>
                     <th>Creation Date</th>
                     <th>Actions</th>
@@ -162,6 +174,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <tr>
                         <td><?php echo $user['id']; ?></td>
                         <td><?php echo htmlspecialchars($user['username']); ?></td>
+                        <td><?php echo htmlspecialchars($user['email']); ?></td>
                         <td><?php echo htmlspecialchars($user['role']); ?></td>
                         <td><?php echo htmlspecialchars($user['created_at']); ?></td>
                         <td>
@@ -182,6 +195,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                     <th>ID</th>
                     <th>Username</th>
+                    <th>Email</th>
                     <th>Creation Date</th>
                 </tr>
             </thead>
@@ -190,6 +204,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <tr>
                         <td><?php echo $admin['id']; ?></td>
                         <td><?php echo htmlspecialchars($admin['username']); ?></td>
+                        <td><?php echo htmlspecialchars($admin['email']); ?></td>
                         <td><?php echo htmlspecialchars($admin['created_at']); ?></td>
                     </tr>
                 <?php endforeach; ?>

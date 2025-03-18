@@ -1,6 +1,7 @@
 <?php
 session_start();
 require 'db.php'; // Include database connection
+require 'email.php'; // Include the email sending functions
 
 $error = ''; // To store error messages
 
@@ -19,10 +20,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($admin && password_verify($password, $admin['password'])) {
         // Login successful for admin
-        $_SESSION['admin_logged_in'] = true;
-        $_SESSION['admin_username'] = $username;
+        // Step 2: Generate and send OTP
+        $otp = generateOTP(); // Use the OTP generation function
+        storeOTP($admin['id'], $otp); // Store the OTP in the database
+        sendOTP($admin['email'], $otp); // Send the OTP via email
 
-        header('Location: index.php'); // Redirect to admin dashboard
+        // Store admin ID in session for OTP verification
+        $_SESSION['admin_id_for_otp'] = $admin['id'];
+
+        // Redirect to OTP verification page
+        header('Location: verify_otp.php');
         exit();
     } else {
         // If no match in admin_users, check the users table
@@ -34,10 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user) {
             if (password_verify($password, $user['password'])) {
                 // Login successful for regular user
-                $_SESSION['user_logged_in'] = true;
-                $_SESSION['user_username'] = $username;
+                // Step 2: Generate and send OTP
+                $otp = generateOTP(); // Use the OTP generation function
+                storeOTP($user['id'], $otp); // Store the OTP in the database
+                sendOTP($user['email'], $otp); // Send the OTP via email
 
-                header('Location: index.php'); // Redirect to user dashboard
+                // Store user ID in session for OTP verification
+                $_SESSION['user_id_for_otp'] = $user['id'];
+
+                // Redirect to OTP verification page
+                header('Location: verify_otp.php');
                 exit();
             } else {
                 // Password doesn't match, show error
