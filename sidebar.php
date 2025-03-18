@@ -31,6 +31,9 @@
             </button>
             <ul class="dropdown-content">
                 <li><a href="view_alerts.php">View Alerts</a></li>
+                <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true): ?>
+                <li><a href="admin_logs.php">View Logs</a></li> <!-- Lien vers la page de réinitialisation -->
+                <?php endif; ?>
             </ul>
         </li>
 

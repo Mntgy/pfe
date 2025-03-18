@@ -28,6 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Store admin ID in session for OTP verification
         $_SESSION['admin_id_for_otp'] = $admin['id'];
 
+        // Log admin login action
+        $action = "Admin Login";
+        $details = "Admin logged in successfully.";
+        $ip_address = $_SERVER['REMOTE_ADDR']; // Get the admin's IP address
+
+        $stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$username, $action, $details, $ip_address]);
+
         // Redirect to OTP verification page
         header('Location: verify_otp.php');
         exit();

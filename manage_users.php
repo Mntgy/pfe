@@ -42,6 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
                         'email' => $email,
                     ]);
                     $success = 'Admin created successfully.';
+
+                    // Log admin action: User creation
+                    $action = "Create Admin";
+                    $details = "Admin created a new admin: $username.";
+                    $ip_address = $_SERVER['REMOTE_ADDR']; // Get the admin's IP address
+
+                    $stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$_SESSION['admin_username'], $action, $details, $ip_address]);
                 }
             } else {
                 $stmt = $pdo->prepare('SELECT id FROM users WHERE username = :username OR email = :email');
@@ -59,6 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
                         'email' => $email,
                     ]);
                     $success = 'User created successfully.';
+
+                    // Log admin action: User creation
+                    $action = "Create User";
+                    $details = "Admin created a new user: $username.";
+                    $ip_address = $_SERVER['REMOTE_ADDR']; // Get the admin's IP address
+
+                    $stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$_SESSION['admin_username'], $action, $details, $ip_address]);
                 }
             }
         } catch (PDOException $e) {
@@ -77,12 +93,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     } else {
         try {
             // Check if user exists in users table
-            $stmt = $pdo->prepare('SELECT id FROM users WHERE id = :id');
+            $stmt = $pdo->prepare('SELECT id, username FROM users WHERE id = :id');
             $stmt->execute(['id' => $user_id]);
             $userExists = $stmt->fetch();
 
             // Check if user exists in admin_users table
-            $stmt = $pdo->prepare('SELECT id FROM admin_users WHERE id = :id');
+            $stmt = $pdo->prepare('SELECT id, username FROM admin_users WHERE id = :id');
             $stmt->execute(['id' => $user_id]);
             $adminExists = $stmt->fetch();
 
@@ -91,10 +107,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
                 $stmt = $pdo->prepare('DELETE FROM users WHERE id = :id');
                 $stmt->execute(['id' => $user_id]);
                 $success = 'User deleted successfully.';
+
+                // Log admin action: User deletion
+                $action = "Delete User";
+                $details = "Admin deleted user: {$userExists['username']}.";
+                $ip_address = $_SERVER['REMOTE_ADDR']; // Get the admin's IP address
+
+                $stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$_SESSION['admin_username'], $action, $details, $ip_address]);
             } elseif ($adminExists) {
                 $stmt = $pdo->prepare('DELETE FROM admin_users WHERE id = :id');
                 $stmt->execute(['id' => $user_id]);
                 $success = 'Admin deleted successfully.';
+
+                // Log admin action: Admin deletion
+                $action = "Delete Admin";
+                $details = "Admin deleted admin: {$adminExists['username']}.";
+                $ip_address = $_SERVER['REMOTE_ADDR']; // Get the admin's IP address
+
+                $stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$_SESSION['admin_username'], $action, $details, $ip_address]);
             } else {
                 $error = 'User not found.';
             }
