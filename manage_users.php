@@ -1,5 +1,5 @@
 <?php
-session_start();
+session_start();  // Ensure session starts before any output
 require 'db.php'; // Include database connection
 
 // Ensure only admin users can access this page
@@ -23,44 +23,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
     } elseif (!in_array($role, ['admin', 'limited'])) {
         $error = 'Invalid role.';
     } else {
-        // Check if the username already exists
-        if ($role == 'admin') {
-            // Check for existing admin username
-            $stmt = $pdo->prepare('SELECT id FROM admin_users WHERE username = :username');
-            $stmt->execute(['username' => $username]);
-            if ($stmt->fetch()) {
-                $error = 'Admin Username already exists.';
-            } else {
-                // Hash the password for admin
-                $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+        try {
+            if ($role === 'admin') {
+                $stmt = $pdo->prepare('SELECT id FROM admin_users WHERE username = :username');
+                $stmt->execute(['username' => $username]);
 
-                // Insert the new admin into the admin_users table
-                $stmt = $pdo->prepare('INSERT INTO admin_users (username, password) VALUES (:username, :password)');
-                $stmt->execute([
-                    'username' => $username,
-                    'password' => $hashed_password,
-                ]);
-                $success = 'Admin created successfully.';
-            }
-        } else {
-            // Check for existing regular user username
-            $stmt = $pdo->prepare('SELECT id FROM users WHERE username = :username');
-            $stmt->execute(['username' => $username]);
-            if ($stmt->fetch()) {
-                $error = 'Username already exists.';
+                if ($stmt->fetch()) {
+                    $error = 'Admin username already exists.';
+                } else {
+                    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+                    $stmt = $pdo->prepare('INSERT INTO admin_users (username, password) VALUES (:username, :password)');
+                    $stmt->execute(['username' => $username, 'password' => $hashed_password]);
+                    $success = 'Admin created successfully.';
+                }
             } else {
-                // Hash the password for regular user
-                $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+                $stmt = $pdo->prepare('SELECT id FROM users WHERE username = :username');
+                $stmt->execute(['username' => $username]);
 
-                // Insert the new user into the users table
-                $stmt = $pdo->prepare('INSERT INTO users (username, password, role) VALUES (:username, :password, :role)');
-                $stmt->execute([
-                    'username' => $username,
-                    'password' => $hashed_password,
-                    'role' => $role,
-                ]);
-                $success = 'User created successfully.';
+                if ($stmt->fetch()) {
+                    $error = 'Username already exists.';
+                } else {
+                    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+                    $stmt = $pdo->prepare('INSERT INTO users (username, password, role) VALUES (:username, :password, :role)');
+                    $stmt->execute([
+                        'username' => $username,
+                        'password' => $hashed_password,
+                        'role' => $role,
+                    ]);
+                    $success = 'User created successfully.';
+                }
             }
+        } catch (PDOException $e) {
+            $error = 'Database error: ' . $e->getMessage();
         }
     }
 }
@@ -69,30 +63,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     $user_id = (int) $_POST['user_id'];
 
-    // Prevent admins from deleting themselves
-    if ($user_id === $_SESSION['admin_id']) {
+    // Ensure $_SESSION['admin_id'] is set before comparison
+    if (isset($_SESSION['admin_id']) && $user_id === $_SESSION['admin_id']) {
         $error = 'You cannot delete yourself.';
     } else {
-        // Check if the user is in admin_users table first
-        $stmt = $pdo->prepare('DELETE FROM admin_users WHERE id = :id');
-        $stmt->execute(['id' => $user_id]);
-
-        // Check if it was in users table
-        if ($stmt->rowCount() === 0) {
-            // If not found in admin_users, check in users table
-            $stmt = $pdo->prepare('DELETE FROM users WHERE id = :id');
+        try {
+            // Check if user exists in users table
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE id = :id');
             $stmt->execute(['id' => $user_id]);
-        }
+            $userExists = $stmt->fetch();
 
-        $success = 'User deleted successfully.';
+            // Check if user exists in admin_users table
+            $stmt = $pdo->prepare('SELECT id FROM admin_users WHERE id = :id');
+            $stmt->execute(['id' => $user_id]);
+            $adminExists = $stmt->fetch();
+
+            // Delete only from the correct table
+            if ($userExists) {
+                $stmt = $pdo->prepare('DELETE FROM users WHERE id = :id');
+                $stmt->execute(['id' => $user_id]);
+                $success = 'User deleted successfully.';
+            } elseif ($adminExists) {
+                $stmt = $pdo->prepare('DELETE FROM admin_users WHERE id = :id');
+                $stmt->execute(['id' => $user_id]);
+                $success = 'Admin deleted successfully.';
+            } else {
+                $error = 'User not found.';
+            }
+        } catch (PDOException $e) {
+            $error = 'Database error: ' . $e->getMessage();
+        }
     }
 }
 
 // Fetch all users and admins
-$stmt = $pdo->query('SELECT id, username, role, created_at FROM users');
+$stmt = $pdo->query('SELECT id, username, role, created_at FROM users ORDER BY created_at DESC');
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $pdo->query('SELECT id, username, created_at FROM admin_users');
+$stmt = $pdo->query('SELECT id, username, created_at FROM admin_users ORDER BY created_at DESC');
 $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -111,10 +119,10 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <!-- Display success or error messages -->
         <?php if (!empty($error)): ?>
-            <p class="message error"><?php echo $error; ?></p>
+            <p class="message error"><?php echo htmlspecialchars($error); ?></p>
         <?php endif; ?>
         <?php if (!empty($success)): ?>
-            <p class="message success"><?php echo $success; ?></p>
+            <p class="message success"><?php echo htmlspecialchars($success); ?></p>
         <?php endif; ?>
 
         <!-- User Creation Form -->
@@ -153,9 +161,9 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php foreach ($users as $user): ?>
                     <tr>
                         <td><?php echo $user['id']; ?></td>
-                        <td><?php echo $user['username']; ?></td>
-                        <td><?php echo $user['role']; ?></td>
-                        <td><?php echo $user['created_at']; ?></td>
+                        <td><?php echo htmlspecialchars($user['username']); ?></td>
+                        <td><?php echo htmlspecialchars($user['role']); ?></td>
+                        <td><?php echo htmlspecialchars($user['created_at']); ?></td>
                         <td>
                             <form method="post" style="display: inline;">
                                 <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
@@ -181,8 +189,8 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php foreach ($admins as $admin): ?>
                     <tr>
                         <td><?php echo $admin['id']; ?></td>
-                        <td><?php echo $admin['username']; ?></td>
-                        <td><?php echo $admin['created_at']; ?></td>
+                        <td><?php echo htmlspecialchars($admin['username']); ?></td>
+                        <td><?php echo htmlspecialchars($admin['created_at']); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
