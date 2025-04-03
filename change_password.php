@@ -1,9 +1,26 @@
 <?php
-session_start();
+require 'session_utils.php';
+startSecureSession();
 require 'db.php';
 
-// ✅ Allow both users and admins
-if (!isset($_SESSION['admin_logged_in']) && !isset($_SESSION['user_logged_in'])) {
+// Verify database connection
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    die("Database connection failed. Please try again later.");
+}
+
+// Validate session and get user info
+if (isset($_SESSION['admin_logged_in'])) {
+    validateAdminSession();
+    $table = 'admin_users';
+    $username = $_SESSION['admin_username'];
+    $id = $_SESSION['admin_id']; // Using 'id' instead of 'user_id'
+} elseif (isset($_SESSION['user_logged_in'])) {
+    validateUserSession();
+    $table = 'users';
+    $username = $_SESSION['user_username'];
+    $id = $_SESSION['user_id']; // Using 'id' instead of 'user_id'
+} else {
+    endSession();
     header('Location: login.php');
     exit();
 }
@@ -12,51 +29,71 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $current_password = trim($_POST['current_password']);
-    $new_password = trim($_POST['new_password']);
-    $confirm_password = trim($_POST['confirm_password']);
+    $current_password = trim($_POST['current_password'] ?? '');
+    $new_password = trim($_POST['new_password'] ?? '');
+    $confirm_password = trim($_POST['confirm_password'] ?? '');
 
-    if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
-        $error = 'All fields are required.';
+    // Validation
+    if (empty($current_password)) {
+        $error = 'Current password is required.';
+    } elseif (empty($new_password)) {
+        $error = 'New password is required.';
+    } elseif (strlen($new_password) < 8) {
+        $error = 'Password must be at least 8 characters.';
+    } elseif (empty($confirm_password)) {
+        $error = 'Please confirm your new password.';
     } elseif ($new_password !== $confirm_password) {
-        $error = 'New password and confirm password do not match.';
+        $error = 'New password and confirmation do not match.';
     } else {
-        // ✅ Determine if user is an admin or a regular user
-        if (isset($_SESSION['admin_logged_in'])) {
-            $table = 'admin_users';
-            $username = $_SESSION['admin_username'];
-        } else {
-            $table = 'users';
-            $username = $_SESSION['user_username'];
-        }
+        try {
+            // Verify current password
+            $stmt = $pdo->prepare("SELECT * FROM $table WHERE id = ?");
+            $stmt->execute([$id]);
+            $user = $stmt->fetch();
 
-        // Fetch the current user details
-        $sql = "SELECT * FROM $table WHERE username = :username";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['username' => $username]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Verify the current password
-        if ($user && password_verify($current_password, $user['password'])) {
-            // Hash the new password
-            $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
-
-            // Update password in the database
-            $update_sql = "UPDATE $table SET password = :password WHERE username = :username";
-            $update_stmt = $pdo->prepare($update_sql);
-            $update_stmt->execute([
-                'password' => $hashed_password,
-                'username' => $username,
-            ]);
-
-            // ✅ Log password change if logging is enabled
-            if (function_exists('logAction')) {
-                logAction($pdo, $username, isset($_SESSION['admin_logged_in']) ? 'admin' : 'user', 'Password Change', 'User changed their password.');
+            if (!$user) {
+                throw new Exception('User account not found.');
             }
 
+            if (!password_verify($current_password, $user['password'])) {
+                throw new Exception('Current password is incorrect.');
+            }
+
+            if (password_verify($new_password, $user['password'])) {
+                throw new Exception('New password must be different from current password.');
+            }
+
+            // Hash new password
+            $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+            if (!$hashed_password) {
+                throw new Exception('Failed to secure new password.');
+            }
+
+            // Update password
+            $pdo->beginTransaction();
+            $update_stmt = $pdo->prepare("UPDATE $table SET password = ? WHERE id = ?");
+            $update_stmt->execute([$hashed_password, $id]);
+
+            // Log the action (using username only since logs table doesn't have user_id)
+            $log_action = "Password Change";
+            $log_details = "User changed their password";
+            $log_stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
+            $log_stmt->execute([$username, $log_action, $log_details, $_SERVER['REMOTE_ADDR']]);
+
+            $pdo->commit();
+            
+            // Regenerate session
+            session_regenerate_id(true);
+            $_SESSION['last_activity'] = time();
+            
             $success = 'Password updated successfully!';
-        } else {
-            $error = 'Current password is incorrect.';
+            
+        } catch (Exception $e) {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $error = $e->getMessage();
+            error_log("Password change error: " . $error);
         }
     }
 }
@@ -68,7 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Password</title>
-    <link rel="stylesheet" href="styles.css">
     <style>
         /* 🌟 General Styles */
         body {
@@ -176,37 +212,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-
-    <!-- ✅ Include Sidebar -->
     <?php include 'sidebar.php'; ?>
-
+    
     <div class="main-content">
         <h1>Change Password</h1>
-
-        <!-- ✅ Display Success or Error Messages -->
+        
         <?php if (!empty($error)): ?>
-            <p class="message error"><?php echo htmlspecialchars($error); ?></p>
+            <div class="message error"><?php echo $error; ?></div>
         <?php endif; ?>
+        
         <?php if (!empty($success)): ?>
-            <p class="message success"><?php echo htmlspecialchars($success); ?></p>
+            <div class="message success"><?php echo $success; ?></div>
         <?php endif; ?>
-
-        <!-- ✅ Password Change Form -->
+        
         <div class="form-container">
-            <form method="POST">
-                <label for="current_password">Current Password:</label>
-                <input type="password" id="current_password" name="current_password" required>
-
-                <label for="new_password">New Password:</label>
-                <input type="password" id="new_password" name="new_password" required>
-
-                <label for="confirm_password">Confirm New Password:</label>
-                <input type="password" id="confirm_password" name="confirm_password" required>
-
+            <form method="POST" autocomplete="off">
+                <div class="form-group">
+                    <label for="current_password">Current Password</label>
+                    <input type="password" id="current_password" name="current_password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password" required minlength="8">
+                    <p class="password-hint">Must be at least 8 characters long</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password">Confirm New Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
+                </div>
+                
                 <button type="submit">Update Password</button>
             </form>
         </div>
     </div>
-
 </body>
 </html>

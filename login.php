@@ -1,76 +1,91 @@
 <?php
-session_start();
-require 'db.php'; // Include database connection
-require 'email.php'; // Include the email sending functions
+// Start session with enhanced configuration
+session_start([
+    'cookie_lifetime' => 86400, // 1 day
+    'cookie_secure'   => isset($_SERVER['HTTPS']), // Secure if HTTPS
+    'cookie_httponly' => true,
+    'cookie_samesite' => 'Strict',
+    'use_strict_mode' => true
+]);
 
-$error = ''; // To store error messages
+require 'db.php';
+require 'email.php';
 
-// Check if the form has been submitted (POST method)
+$error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // Trim the username and password to avoid spaces
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    // First, check the admin_users table
+    // Check admin_users table first
     $sql = "SELECT * FROM admin_users WHERE username = :username";
     $stmt = $pdo->prepare($sql);
     $stmt->execute(['username' => $username]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($admin && password_verify($password, $admin['password'])) {
-        // Login successful for admin
-        // Step 2: Generate and send OTP
-        $otp = generateOTP(); // Use the OTP generation function
-        storeOTP($admin['id'], $otp); // Store the OTP in the database
-        sendOTP($admin['email'], $otp); // Send the OTP via email
-
-        // Store admin ID in session for OTP verification
+        // Set complete admin session
+        $_SESSION['admin_logged_in'] = true;
+        $_SESSION['admin_id'] = $admin['id'];
+        $_SESSION['admin_username'] = $admin['username'];
+        $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
+        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+        $_SESSION['last_activity'] = time();
+        
+        // Generate and send OTP
+        $otp = generateOTP();
+        storeOTP($admin['id'], $otp);
+        sendOTP($admin['email'], $otp);
+        
         $_SESSION['admin_id_for_otp'] = $admin['id'];
-
+        
         // Log admin login action
-        $action = "Admin Login";
-        $details = "Admin logged in successfully.";
-        $ip_address = $_SERVER['REMOTE_ADDR']; // Get the admin's IP address
-
+        $action = "Admin Login Attempt";
+        $details = "Admin login initiated, OTP sent";
         $stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$username, $action, $details, $ip_address]);
+        $stmt->execute([$username, $action, $details, $_SERVER['REMOTE_ADDR']]);
 
-        // Redirect to OTP verification page
+        // Regenerate session ID for security
+        session_regenerate_id(true);
+        
         header('Location: verify_otp.php');
         exit();
     } else {
-        // If no match in admin_users, check the users table
+        // Check regular users table
         $sql = "SELECT * FROM users WHERE username = :username";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['username' => $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user) {
-            if (password_verify($password, $user['password'])) {
-                // Login successful for regular user
-                // Step 2: Generate and send OTP
-                $otp = generateOTP(); // Use the OTP generation function
-                storeOTP($user['id'], $otp); // Store the OTP in the database
-                sendOTP($user['email'], $otp); // Send the OTP via email
-
-                // Store user ID in session for OTP verification
-                $_SESSION['user_id_for_otp'] = $user['id'];
-
-                // Redirect to OTP verification page
-                header('Location: verify_otp.php');
-                exit();
-            } else {
-                // Password doesn't match, show error
-                $error = "Invalid password for user.";
-            }
+        if ($user && password_verify($password, $user['password'])) {
+            // Set complete user session
+            $_SESSION['user_logged_in'] = true;
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_username'] = $user['username'];
+            $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
+            $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+            $_SESSION['last_activity'] = time();
+            
+            // Generate and send OTP
+            $otp = generateOTP();
+            storeOTP($user['id'], $otp);
+            sendOTP($user['email'], $otp);
+            
+            $_SESSION['user_id_for_otp'] = $user['id'];
+            
+            // Regenerate session ID for security
+            session_regenerate_id(true);
+            
+            header('Location: verify_otp.php');
+            exit();
         } else {
-            // If no user found in both tables
             $error = "Invalid username or password.";
         }
     }
 }
 ?>
+
+<!-- Rest of your HTML remains the same -->
 
 <!DOCTYPE html>
 <html lang="en">

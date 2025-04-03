@@ -1,47 +1,116 @@
 <?php
-session_start();
-require 'db.php'; // Include database connection
+require 'session_utils.php';
+startSecureSession();
+require 'db.php';
 
-$error = ''; // To store error messages
+// Check database connection
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    die("Database connection error. Please try again later.");
+}
 
-// Handle OTP verification
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
-    $user_entered_otp = $_POST['otp'];
+$error = '';
 
-    // Check if the user is an admin or regular user
-    if (isset($_SESSION['admin_id_for_otp'])) {
-        $user_id = $_SESSION['admin_id_for_otp'];
-        $redirect = 'index.php'; // Redirect to admin dashboard
-    } elseif (isset($_SESSION['user_id_for_otp'])) {
-        $user_id = $_SESSION['user_id_for_otp'];
-        $redirect = 'index.php'; // Redirect to user dashboard
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $user_entered_otp = trim($_POST['otp'] ?? '');
+
+    // Input validation
+    if (empty($user_entered_otp)) {
+        $error = "Please enter the OTP code.";
+    } elseif (!preg_match('/^\d{6}$/', $user_entered_otp)) {
+        $error = "OTP must be 6 digits.";
     } else {
-        $error = "Invalid session. Please log in again.";
-    }
+        // Determine user type and get user ID from session
+        if (isset($_SESSION['admin_id_for_otp'])) {
+            $user_id = $_SESSION['admin_id_for_otp'];
+            $is_admin = true;
+            $redirect = 'index.php';
+        } elseif (isset($_SESSION['user_id_for_otp'])) {
+            $user_id = $_SESSION['user_id_for_otp'];
+            $is_admin = false;
+            $redirect = 'index.php';
+        } else {
+            endSession();
+            header('Location: login.php?error=session_expired');
+            exit();
+        }
 
-    // Verify the OTP
-    if (empty($error)) {
-        $stmt = $pdo->prepare("SELECT otp_code, expires_at FROM otp_store WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
-        $stmt->execute([$user_id]);
-        $otp_data = $stmt->fetch();
+        try {
+            // Verify the OTP - using your current table structure
+            $stmt = $pdo->prepare("SELECT otp_code, expires_at FROM otp_store 
+                                  WHERE user_id = ? 
+                                  ORDER BY created_at DESC LIMIT 1");
+            $stmt->execute([$user_id]);
+            $otp_data = $stmt->fetch();
 
-        if ($otp_data && $user_entered_otp === $otp_data['otp_code'] && time() <= strtotime($otp_data['expires_at'])) {
-            // OTP is valid, log the user in
-            if (isset($_SESSION['admin_id_for_otp'])) {
+            if (!$otp_data) {
+                throw new Exception("No OTP found. Please request a new one.");
+            }
+
+            if ($user_entered_otp !== $otp_data['otp_code']) {
+                throw new Exception("Invalid OTP code.");
+            }
+
+            if (time() > strtotime($otp_data['expires_at'])) {
+                throw new Exception("OTP has expired. Please request a new one.");
+            }
+
+            // OTP is valid - complete login
+            if ($is_admin) {
                 $_SESSION['admin_logged_in'] = true;
+                $_SESSION['admin_id'] = $user_id;
                 unset($_SESSION['admin_id_for_otp']);
+                
+                // Get admin details
+                $stmt = $pdo->prepare("SELECT username FROM admin_users WHERE id = ?");
+                $stmt->execute([$user_id]);
+                $admin = $stmt->fetch();
+                $_SESSION['admin_username'] = $admin['username'];
             } else {
                 $_SESSION['user_logged_in'] = true;
+                $_SESSION['user_id'] = $user_id;
                 unset($_SESSION['user_id_for_otp']);
+                
+                // Get user details
+                $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+                $stmt->execute([$user_id]);
+                $user = $stmt->fetch();
+                $_SESSION['user_username'] = $user['username'];
             }
+
+            // Set session security parameters
+            $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
+            $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+            $_SESSION['last_activity'] = time();
+
+            // Delete used OTP
+            $pdo->prepare("DELETE FROM otp_store WHERE user_id = ?")
+                ->execute([$user_id]);
+
+            // Regenerate session ID
+            session_regenerate_id(true);
+
+            // Log successful login
+            $log_action = "Successful Login";
+            $log_details = "User successfully completed OTP verification";
+            $log_stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
+            $log_stmt->execute([
+                $_SESSION[$is_admin ? 'admin_username' : 'user_username'],
+                $log_action,
+                $log_details,
+                $_SERVER['REMOTE_ADDR']
+            ]);
 
             header("Location: $redirect");
             exit();
-        } else {
-            $error = "Invalid or expired OTP.";
+
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+            error_log("OTP Verification Error: " . $error);
         }
     }
 }
+
+// HTML remains the same as in your previous version
 ?>
 
 <!DOCTYPE html>
@@ -51,114 +120,154 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify OTP</title>
     <style>
-        /* General body styling */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background: #f4f4f9; /* Light background color */
+            background: #f8f9fa;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
         }
-
-        /* Container for the OTP form */
-        .login-container {
-            background: #ffffff; /* White background for the form */
-            padding: 30px;
-            border-radius: 10px; /* Rounded corners */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            width: 300px;
+        
+        .otp-container {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
             text-align: center;
         }
-
-        /* OTP header */
-        .login-container h1 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #333333;
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
         }
-
-        /* Label styling */
-        .login-container label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #555555;
+        
+        .otp-form {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
             text-align: left;
         }
-
-        /* Input field for OTP */
-        .login-container input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 14px;
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #495057;
         }
-
-        /* Focus effect for input field */
-        .login-container input[type="text"]:focus {
-            border-color: #007bff; /* Blue outline on focus */
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #4dabf7;
             outline: none;
-            box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
         }
-
-        /* Button styling */
-        .login-container button {
-            background: #007bff; /* Blue background */
-            color: #ffffff; /* White text */
-            padding: 10px 15px;
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #4dabf7;
+            color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
             width: 100%;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s ease;
         }
-
-        /* Button hover effect */
-        .login-container button:hover {
-            background: #0056b3; /* Darker blue */
+        
+        .btn:hover {
+            background-color: #339af0;
         }
-
-        /* Error message styling */
-        .login-container .error-message {
-            color: red;
-            font-size: 14px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        /* Resend OTP link styling */
-        .login-container .resend-otp {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #007bff;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .login-container .resend-otp:hover {
+        
+        .btn-resend {
+            background: none;
+            color: #4dabf7;
             text-decoration: underline;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .btn-resend:hover {
+            color: #228be6;
+        }
+        
+        .message {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        
+        .error {
+            background-color: #fff3bf;
+            color: #e67700;
+        }
+        
+        .success {
+            background-color: #d3f9d8;
+            color: #2b8a3e;
+        }
+        
+        .otp-instructions {
+            font-size: 0.875rem;
+            color: #868e96;
+            margin-bottom: 1.5rem;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>Verify OTP</h1>
+    <div class="otp-container">
+        <h1>Verify Your Identity</h1>
+        <p class="otp-instructions">Please enter the 6-digit verification code sent to your email.</p>
+        
         <?php if (!empty($error)): ?>
-            <p class="error-message"><?php echo $error; ?></p>
+            <div class="message error"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
-        <form method="post" action="verify_otp.php">
-            <label for="otp">Enter OTP:</label>
-            <input type="text" id="otp" name="otp" required>
-            <button type="submit" name="verify_otp">Verify OTP</button>
+        
+        <?php if (!empty($success)): ?>
+            <div class="message success"><?php echo htmlspecialchars($success); ?></div>
+        <?php endif; ?>
+        
+        <form method="post" class="otp-form">
+            <div class="form-group">
+                <label for="otp">Verification Code</label>
+                <input type="text" id="otp" name="otp" inputmode="numeric" pattern="\d{6}" 
+                       maxlength="6" required autocomplete="off" autofocus>
+            </div>
+            <button type="submit" name="verify_otp" class="btn">Verify</button>
         </form>
-        <a href="#" class="resend-otp">Resend OTP</a>
+        
+        <form method="post">
+            <p>Didn't receive a code? <button type="submit" name="resend_otp" class="btn-resend">Resend OTP</button></p>
+        </form>
     </div>
+
+    <script>
+        // Auto-focus OTP input and move to next on input
+        document.getElementById('otp').focus();
+        
+        // Prevent form resubmission on refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
 </body>
 </html>
