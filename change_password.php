@@ -13,12 +13,12 @@ if (isset($_SESSION['admin_logged_in'])) {
     validateAdminSession();
     $table = 'admin_users';
     $username = $_SESSION['admin_username'];
-    $id = $_SESSION['admin_id']; // Using 'id' instead of 'user_id'
+    $id = $_SESSION['admin_id'];
 } elseif (isset($_SESSION['user_logged_in'])) {
     validateUserSession();
     $table = 'users';
     $username = $_SESSION['user_username'];
-    $id = $_SESSION['user_id']; // Using 'id' instead of 'user_id'
+    $id = $_SESSION['user_id'];
 } else {
     endSession();
     header('Location: login.php');
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_stmt = $pdo->prepare("UPDATE $table SET password = ? WHERE id = ?");
             $update_stmt->execute([$hashed_password, $id]);
 
-            // Log the action (using username only since logs table doesn't have user_id)
+            // Log the action
             $log_action = "Password Change";
             $log_details = "User changed their password";
             $log_stmt = $pdo->prepare("INSERT INTO logs (username, action, details, ip_address) VALUES (?, ?, ?, ?)");
@@ -105,17 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Password</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        /* 🌟 General Styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f8f9fc;
-            display: flex;
-        }
-
-        /* 🌟 Main Content */
+        /* Consistent with other pages */
         .main-content {
             margin-left: 260px;
             padding: 40px;
@@ -129,84 +121,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
         }
 
-        h1 {
-            font-size: 2rem;
-            color: #007bff;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-            text-align: center;
-        }
-
-        /* 🌟 Form Styling */
         .form-container {
             width: 100%;
             max-width: 500px;
-            padding: 20px;
+            padding: 30px;
             background: white;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            text-align: center;
         }
 
-        form input {
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             font-size: 14px;
         }
 
-        form button {
+        .password-hint {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        button[type="submit"] {
             width: 100%;
-            background: #007bff;
+            padding: 12px;
+            background-color: #007bff;
             color: white;
-            padding: 10px;
             border: none;
-            border-radius: 5px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 16px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
 
-        form button:hover {
-            background: #0056b3;
+        button[type="submit"]:hover {
+            background-color: #0069d9;
         }
 
-        /* 🌟 Message Styles */
-        .message {
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 14px;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        .success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* 🌟 Responsive Design */
         @media (max-width: 768px) {
             .main-content {
-                margin-left: 240px;
+                margin-left: 0;
                 padding: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .main-content {
-                margin-left: 220px;
-                padding: 15px;
             }
         }
     </style>
@@ -218,11 +185,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Change Password</h1>
         
         <?php if (!empty($error)): ?>
-            <div class="message error"><?php echo $error; ?></div>
+            <div class="alert alert-danger"><?php echo $error; ?></div>
         <?php endif; ?>
         
         <?php if (!empty($success)): ?>
-            <div class="message success"><?php echo $success; ?></div>
+            <div class="alert alert-success"><?php echo $success; ?></div>
         <?php endif; ?>
         
         <div class="form-container">
