@@ -21,13 +21,13 @@ if (!isset($_SESSION['last_checked'])) {
 }
 
 try {
-    // Count new tickets
+    // Count new tickets (these are essentially your emails)
     $newTickets = $pdo->query("SELECT COUNT(*) FROM tickets WHERE status = 'Nouveau'")->fetchColumn();
     
-    // Count unread emails since last check
-    $unreadEmails = $pdo->prepare("SELECT COUNT(*) FROM emails WHERE is_read = 0 AND created_at > :last_checked");
-    $unreadEmails->execute(['last_checked' => $_SESSION['last_checked']]);
-    $unreadEmails = $unreadEmails->fetchColumn();
+    // Count new "emails" (tickets) since last check
+    $newEmails = $pdo->prepare("SELECT COUNT(*) FROM tickets WHERE created_at > :last_checked AND status = 'Nouveau'");
+    $newEmails->execute(['last_checked' => $_SESSION['last_checked']]);
+    $newEmails = $newEmails->fetchColumn();
     
     // Count recent activity
     $recentActivity = $pdo->query("SELECT COUNT(*) FROM logs WHERE created_at > NOW() - INTERVAL 1 DAY")->fetchColumn();
@@ -36,13 +36,13 @@ try {
     $_SESSION['last_checked'] = date('Y-m-d H:i:s');
     
 } catch (PDOException $e) {
-    $newTickets = $unreadEmails = $recentActivity = 0;
+    $newTickets = $newEmails = $recentActivity = 0;
     error_log("Dashboard error: " . $e->getMessage());
 }
 
 // Check if there are new emails to show a message
-if ($unreadEmails > 0) {
-    $newEmailMessage = "<div class='alert alert-success'>Vous avez $unreadEmails nouveau(x) email(s)!</div>";
+if ($newEmails > 0) {
+    $newEmailMessage = "<div class='alert alert-success'>Vous avez $newEmails nouveau(x) message(s)!</div>";
 } else {
     $newEmailMessage = "";
 }
@@ -75,7 +75,7 @@ if ($unreadEmails > 0) {
         }
         
         .card-tickets { border-color: #ffc107; }
-        .card-emails { border-color: #17a2b8; }
+        .card-messages { border-color: #17a2b8; }
         .card-activity { border-color: #28a745; }
         
         .card-header {
@@ -134,9 +134,12 @@ if ($unreadEmails > 0) {
             background-color: #d4edda;
             color: #155724;
             border-left: 4px solid #28a745;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
-        .new-email-badge {
+        .new-message-badge {
             position: absolute;
             top: -10px;
             right: -10px;
@@ -152,15 +155,20 @@ if ($unreadEmails > 0) {
             font-weight: bold;
         }
         
+        .has-new-messages {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+        
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
             }
-        }
-        
-        /* Auto-refresh the page every 30 seconds */
-        meta[http-equiv="refresh"] {
-            display: none;
         }
     </style>
 </head>
@@ -188,21 +196,7 @@ if ($unreadEmails > 0) {
                 <a href="assistance.php" class="btn">Voir les tickets</a>
             </div>
             
-            <!-- Emails Card -->
-            <div class="dashboard-card card-emails">
-                <?php if ($unreadEmails > 0): ?>
-                    <div class="new-email-badge"><?php echo $unreadEmails; ?></div>
-                <?php endif; ?>
-                <div class="card-header">
-                    <h2 class="card-title">Nouveaux Emails</h2>
-                    <i class="fas fa-envelope card-icon"></i>
-                </div>
-                <div class="card-value"><?php echo $unreadEmails; ?></div>
-                <div class="card-footer">
-                    Emails non lus
-                </div>
-                <a href="view_emails.php" class="btn">Voir les emails</a>
-            </div>
+           
             
             <!-- Activity Card -->
             <div class="dashboard-card card-activity">
